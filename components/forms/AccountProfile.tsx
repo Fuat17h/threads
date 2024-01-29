@@ -20,6 +20,9 @@ import Image from "next/image";
 import { ChangeEvent, useState } from "react";
 import { isBase64Image } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing";
+import { updateUser } from "@/lib/actions/user.actions";
+import { usePathname, useRouter } from "next/navigation";
+import { profile } from "console";
 
 interface Props {
   user: {
@@ -36,6 +39,8 @@ interface Props {
 const AccountProfile = ({ user, btnTitle }: Props) => {
   const [files, setFiles] = useState<File[]>([]);
   const { startUpload } = useUploadThing("media");
+  const router = useRouter();
+  const pathname = usePathname();
 
   console.log(user, "from fuat");
   const form = useForm({
@@ -55,7 +60,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
     e.preventDefault();
     const fileReader = new FileReader();
 
-    if (e.target.files && e.target.files.length > 1) {
+    if (e.target.files && e.target.files.length) {
       // e.target.files.length > 1
       const file = e.target.files[0];
 
@@ -85,7 +90,21 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
         values.profile_photo = imgRes[0].url;
       }
     }
-    // TODO: Update user profile
+
+    await updateUser({
+      userId: user.id,
+      username: values.username,
+      name: values.name,
+      bio: values.bio,
+      image: values.profile_photo,
+      path: pathname,
+    });
+
+    if (pathname === "/profile/edit") {
+      router.back();
+    } else {
+      router.push("/");
+    }
   };
 
   return (
